@@ -10,7 +10,6 @@
 | windows7-x64 (7 SP1/8/8.1) | windows-2022 | 3.8 + `requirements-win7.txt`, PyInstaller 5.13.2 |
 | linux-x64 | ubuntu-22.04 (glibc 2.35) | 3.12 |
 | macos-arm64 | macos-14 | 3.12 |
-| macos-x64 | macos-15-intel | 3.12 |
 
 ## Вручную
 

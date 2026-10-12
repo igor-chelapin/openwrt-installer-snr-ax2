@@ -26,7 +26,7 @@ Windows 7 / 10 / 11 · Linux · macOS · <a href="README.md">Русский</a>
 
 ## Quick start
 
-1. Download the file for your OS from the **[latest release](../../releases/latest)** (`windows-x64`, `windows7-x64`, `linux-x64`, `macos-arm64`, `macos-x64`). Windows has a `Setup.exe` installer and a single portable `.exe`; `…-all-files.zip` contains the whole project. The OpenWrt firmware is **built into the program** (a single file you can send to a friend). Settings, logs and backups are kept in the user data folder (Windows: `%LOCALAPPDATA%\OpenWrtInstaller`, Linux: `~/.local/share/OpenWrtInstaller`, macOS: `~/Library/Application Support/OpenWrtInstaller`); put an empty `portable.txt` next to the program to keep them beside it instead.
+1. Download the file for your OS from the **[latest release](../../releases/latest)** (`windows-x64`, `windows7-x64`, `linux-x64`, `macos-arm64`; Intel Macs — run from source). Windows has a `Setup.exe` installer and a single portable `.exe`; `…-all-files.zip` contains the whole project. The OpenWrt firmware is **built into the program** (a single file you can send to a friend). Settings, logs and backups are kept in the user data folder (Windows: `%LOCALAPPDATA%\OpenWrtInstaller`, Linux: `~/.local/share/OpenWrtInstaller`, macOS: `~/Library/Application Support/OpenWrtInstaller`); put an empty `portable.txt` next to the program to keep them beside it instead.
 2. Connect the laptop to a **LAN** port of the router (ISP cable → **WAN**).
 3. Run it: Windows — `OpenWrtInstaller.exe` (asks for admin rights); Linux — `sudo -E ./OpenWrtInstaller`; macOS — right-click `OpenWrtInstaller.app` → Open (root is needed only for flashing: `sudo OpenWrtInstaller.app/Contents/MacOS/OpenWrtInstaller`).
 4. Follow the setup wizard.

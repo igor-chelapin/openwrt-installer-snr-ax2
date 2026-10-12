@@ -65,8 +65,7 @@ Windows 7 / 10 / 11 · Linux · macOS · <a href="README.en.md">English</a>
    | Windows 10 / 11 | `OpenWrtInstaller-Setup-…-windows-x64.exe` — установщик (ярлык в «Пуске» и на рабочем столе) или `OpenWrtInstaller-…-windows-x64.exe` — один файл без установки |
    | Windows 7 SP1 / 8 / 8.1 | `OpenWrtInstaller-Setup-…-windows7-x64.exe` или `OpenWrtInstaller-…-windows7-x64.exe` (без сканирования QR камерой) |
    | Linux x64 | `OpenWrtInstaller-…-linux-x64.tar.gz` |
-   | macOS (Apple M1–M4) | `OpenWrtInstaller-…-macos-arm64.zip` |
-   | macOS (Intel) | `OpenWrtInstaller-…-macos-x64.zip` |
+   | macOS (Apple M1–M4) | `OpenWrtInstaller-…-macos-arm64.zip` (Mac на Intel — только запуск из исходников, см. ниже) |
    | Все файлы проекта одним архивом | `openwrt-installer-snr-ax2-…-all-files.zip` (исходники, прошивки, документация) |
 
    Прошивка OpenWrt **встроена в программу** — это один файл, ничего докачивать и распаковывать рядом не нужно, его можно просто переслать другу.
