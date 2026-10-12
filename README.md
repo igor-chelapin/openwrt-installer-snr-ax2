@@ -3,7 +3,7 @@
 <h1 align="center">OpenWrt Installer SNR AX2</h1>
 
 <p align="center">
-Программа, которая сама прошивает роутер <b>SNR-CPE-AX2</b> на OpenWrt и превращает его в домашний роутер с VPN (xray / vless), обходом блокировок (zapret) и защищённым DNS — без командной строки и ковыряния в настройках OpenWrt.
+Программа, которая сама прошивает роутер <b>SNR-CPE-AX2</b> на OpenWrt и превращает его в домашний роутер с VPN (xray / vless),  (zapret) и защищённым DNS — без командной строки и ковыряния в настройках OpenWrt.
 <br><br>
 Windows 7 / 10 / 11 · Linux · macOS · <a href="README.en.md">English</a>
 </p>
