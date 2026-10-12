@@ -92,22 +92,28 @@ jobs:
         shell: pwsh
         run: |
           foreach ($app in 'OpenWrtInstaller', 'OpenWrtPanel') {
-            $p = Start-Process -FilePath "dist\$app.exe" -ArgumentList '--selftest', "$PWD\selftest-$app.json" -Wait -PassThru
-            Get-Content "selftest-$app.json"
-            if ($p.ExitCode -ne 0) { throw "$app self-test failed (exit $($p.ExitCode))" }
+            $json = "$PWD\selftest-$app.json"
+            $p = Start-Process -FilePath "dist\$app.exe" -ArgumentList '--selftest', $json -Wait -PassThru
+            $out = if (Test-Path $json) { (Get-Content $json -Raw) } else { 'no output' }
+            $one = ($out -replace '\s+', ' ')
+            if ($p.ExitCode -ne 0) { Write-Output "::error title=$app self-test (${{ matrix.name }})::exit $($p.ExitCode) $one"; exit 1 }
+            Write-Output "::notice title=$app self-test (${{ matrix.name }})::$one"
           }
 
-      - name: Self-test (Linux)
-        if: runner.os == 'Linux'
+      - name: Self-test (Linux / macOS)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
-          dist/OpenWrtInstaller --selftest
-          dist/OpenWrtPanel --selftest
-
-      - name: Self-test (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          dist/OpenWrtInstaller.app/Contents/MacOS/OpenWrtInstaller --selftest
-          dist/OpenWrtPanel.app/Contents/MacOS/OpenWrtPanel --selftest
+          for a in OpenWrtInstaller OpenWrtPanel; do
+            if [ "$RUNNER_OS" = macOS ]; then exe="dist/$a.app/Contents/MacOS/$a"; else exe="dist/$a"; fi
+            if out=$("$exe" --selftest 2>&1); then
+              echo "$out"; echo "::notice title=$a self-test (${{ matrix.name }})::$(echo "$out" | tr -s ' \n' ' ' | tail -c 1800)"
+            else
+              code=$?; echo "$out"
+              echo "::error title=$a self-test (${{ matrix.name }})::exit $code $(echo "$out" | tr -s ' \n' ' ' | tail -c 1800)"
+              exit 1
+            fi
+          done
 
       - name: Installer (Windows)
         if: runner.os == 'Windows'
