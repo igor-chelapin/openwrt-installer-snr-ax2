@@ -6,6 +6,9 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+  # релиз, созданный на сайте GitHub (Releases → Draft a new release → Publish): соберёт и приложит все файлы
+  release:
+    types: [published]
 
 permissions:
   contents: write
