@@ -179,15 +179,35 @@ jobs:
           cat > notes.md <<EOF
           ## Что скачать
 
+          Есть две программы — выберите одну:
+
+          - **OpenWrt Installer** — полная версия: **прошивает роутер SNR-CPE-AX2** на OpenWrt (прошивка уже встроена), делает бэкап и восстановление заводской прошивки, а потом настраивает роутер. Нужны права администратора.
+          - **OpenWrt Panel** — **только панель управления, без прошивки**. Для роутера, на котором OpenWrt уже стоит (любая модель): VPN, подписки, zapret, DNS, Wi-Fi, компоненты. Права администратора не нужны.
+
+          ### OpenWrt Installer — прошивка + настройка
+
           | Система | Файл |
           |---|---|
           | **Windows 10 / 11** | \`OpenWrtInstaller-Setup-$VER-windows-x64.exe\` — установщик с ярлыками, или \`OpenWrtInstaller-$VER-windows-x64.exe\` — один файл без установки |
           | **Windows 7 SP1 / 8 / 8.1** | \`OpenWrtInstaller-Setup-$VER-windows7-x64.exe\` или \`OpenWrtInstaller-$VER-windows7-x64.exe\` (без сканирования QR камерой) |
           | **Linux x64** | \`OpenWrtInstaller-$VER-linux-x64.tar.gz\` |
           | **macOS Apple M1–M4** | \`OpenWrtInstaller-$VER-macos-arm64.zip\` |
-          | Все файлы проекта | \`openwrt-installer-snr-ax2-$VER-all-files.zip\` — исходники, прошивки, документация |
 
-          Прошивка OpenWrt 25.12.4 для SNR-CPE-AX2 **уже встроена** в программу. \`OpenWrtPanel-…\` — панель управления без прошивки (для любого роутера с OpenWrt).
+          ### OpenWrt Panel — только управление, без прошивки
+
+          | Система | Файл |
+          |---|---|
+          | **Windows 10 / 11** | \`OpenWrtPanel-$VER-windows-x64.exe\` |
+          | **Windows 7 SP1 / 8 / 8.1** | \`OpenWrtPanel-$VER-windows7-x64.exe\` (без сканирования QR камерой) |
+          | **Linux x64** | \`OpenWrtPanel-$VER-linux-x64.tar.gz\` |
+          | **macOS Apple M1–M4** | \`OpenWrtPanel-$VER-macos-arm64.zip\` |
+
+          ### Остальное
+
+          | Что | Файл |
+          |---|---|
+          | Все файлы проекта (исходники, прошивки, документация) | \`openwrt-installer-snr-ax2-$VER-all-files.zip\` |
+          | Контрольные суммы | \`SHA256SUMS.txt\` |
 
           Установка через git:
           \`\`\`
@@ -197,7 +217,7 @@ jobs:
           ./run.sh     # Linux / macOS
           \`\`\`
 
-          Контрольные суммы файлов — \`SHA256SUMS.txt\`. Что нового — [CHANGELOG.md]($REPO/blob/main/CHANGELOG.md).
+          Что нового — [CHANGELOG.md]($REPO/blob/main/CHANGELOG.md).
           EOF
           sed -i 's/^          //' notes.md
 
