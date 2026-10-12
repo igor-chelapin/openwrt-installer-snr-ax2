@@ -37,10 +37,12 @@ import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, filedialog
 
+PARAMIKO_ERROR = ""
 try:
     import paramiko
-except ImportError:
+except Exception as _e:          # не только ImportError: в сборке может не загрузиться двоичная библиотека
     paramiko = None
+    PARAMIKO_ERROR = f"{type(_e).__name__}: {_e}"
 
 BASE_DIR = os.path.dirname(os.path.abspath(
     sys.executable if getattr(sys, "frozen", False) else __file__))
@@ -5491,7 +5493,7 @@ def selftest():
                 if name in expected and expected[name] != digest:
                     info["errors"].append("SHA256 не совпадает: " + name)
     if paramiko is None:
-        info["errors"].append("нет paramiko")
+        info["errors"].append("нет paramiko: " + PARAMIKO_ERROR)
     info["ok"] = not info["errors"]
     text = json.dumps(info, ensure_ascii=False, indent=2)
     if out:
