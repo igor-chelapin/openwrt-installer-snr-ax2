@@ -1,0 +1,7 @@
+# Windows 7 SP1 x64: Python 3.8 + версии библиотек без Rust (новые не запускаются на Win7)
+paramiko==2.12.0
+cryptography==3.3.2
+bcrypt==3.2.2
+pynacl==1.5.0
+six>=1.16
+segno==1.5.3

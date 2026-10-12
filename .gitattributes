@@ -1,0 +1,11 @@
+# Скрипты: правильные концы строк на любой системе (git clone на Windows не сломает run.sh, и наоборот)
+*.sh   text eol=lf
+*.bat  text eol=crlf
+*.iss  text eol=crlf
+*.py   text eol=lf
+# Прошивки, иконки, картинки — двоичные, без преобразований
+*.itb  binary
+*.fip  binary
+*.ico  binary
+*.icns binary
+*.png  binary

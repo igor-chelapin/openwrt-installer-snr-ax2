@@ -1,0 +1,206 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64          # Windows 10 / 11
+            os: windows-2022
+            python: '3.12'
+            req: requirements.txt
+            pyinstaller: pyinstaller
+          - name: windows7-x64         # Windows 7 SP1 / 8 / 8.1
+            os: windows-2022
+            python: '3.8'
+            req: requirements-win7.txt
+            pyinstaller: pyinstaller==5.13.2
+          - name: linux-x64
+            os: ubuntu-22.04
+            python: '3.12'
+            req: requirements.txt
+            pyinstaller: pyinstaller
+          - name: macos-arm64          # Apple Silicon (M1…M4)
+            os: macos-14
+            python: '3.12'
+            req: requirements.txt
+            pyinstaller: pyinstaller
+          - name: macos-x64            # Mac на Intel
+            os: macos-15-intel
+            python: '3.12'
+            req: requirements.txt
+            pyinstaller: pyinstaller
+    env:
+      # прошивки и контрольные суммы встраиваются в программу (разделитель путей у PyInstaller: ';' на Windows, ':' на остальных)
+      FW_WIN: --add-data "firmware/*.itb;firmware" --add-data "firmware/*.fip;firmware" --add-data "firmware/SHA256SUMS;firmware"
+      FW_NIX: --add-data firmware/*.itb:firmware --add-data firmware/*.fip:firmware --add-data firmware/SHA256SUMS:firmware
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Linux deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk tk-dev
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ${{ matrix.req }} ${{ matrix.pyinstaller }}
+
+      - name: Version
+        shell: bash
+        run: echo "VER=$(python scripts/version.py)" >> "$GITHUB_ENV"
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          eval python -m PyInstaller --noconfirm --onefile --noconsole --uac-admin --icon assets/app.ico $FW_WIN --name OpenWrtInstaller openwrt_installer.py
+          python -m PyInstaller --noconfirm --onefile --noconsole --icon assets/panel.ico --name OpenWrtPanel panel.py
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          python -m PyInstaller --noconfirm --onefile $FW_NIX --name OpenWrtInstaller openwrt_installer.py
+          python -m PyInstaller --noconfirm --onefile --name OpenWrtPanel panel.py
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          python -m PyInstaller --noconfirm --windowed --icon assets/app.icns $FW_NIX --name OpenWrtInstaller openwrt_installer.py
+          python -m PyInstaller --noconfirm --windowed --icon assets/panel.icns --name OpenWrtPanel panel.py
+
+      # Самопроверка готовых программ: запускаются, видят встроенную прошивку, SHA256 совпадает
+      - name: Self-test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          foreach ($app in 'OpenWrtInstaller', 'OpenWrtPanel') {
+            $p = Start-Process -FilePath "dist\$app.exe" -ArgumentList '--selftest', "$PWD\selftest-$app.json" -Wait -PassThru
+            Get-Content "selftest-$app.json"
+            if ($p.ExitCode -ne 0) { throw "$app self-test failed (exit $($p.ExitCode))" }
+          }
+
+      - name: Self-test (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          dist/OpenWrtInstaller --selftest
+          dist/OpenWrtPanel --selftest
+
+      - name: Self-test (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          dist/OpenWrtInstaller.app/Contents/MacOS/OpenWrtInstaller --selftest
+          dist/OpenWrtPanel.app/Contents/MacOS/OpenWrtPanel --selftest
+
+      - name: Installer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc /Q "/DAppVersion=$env:VER" '/DExeDir=..\dist' "/DOutName=OpenWrtInstaller-Setup-$env:VER-${{ matrix.name }}" 'installer\OpenWrtInstaller.iss'
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
+
+      - name: Package
+        shell: bash
+        run: |
+          N="${{ matrix.name }}"
+          mkdir -p pkg tmp
+          case "$RUNNER_OS" in
+            Windows)
+              # один exe без установки + установщик
+              cp dist/OpenWrtInstaller.exe "pkg/OpenWrtInstaller-$VER-$N.exe"
+              cp dist/OpenWrtPanel.exe "pkg/OpenWrtPanel-$VER-$N.exe"
+              cp release/*.exe pkg/ ;;
+            Linux)
+              for a in OpenWrtInstaller OpenWrtPanel; do
+                D="$a-$VER-$N"; mkdir -p "tmp/$D"
+                cp "dist/$a" README.md README.en.md LICENSE "tmp/$D/"
+                tar czf "pkg/$D.tar.gz" -C tmp "$D"
+              done ;;
+            macOS)
+              for a in OpenWrtInstaller OpenWrtPanel; do
+                D="$a-$VER-$N"; mkdir -p "tmp/$D"
+                cp -R "dist/$a.app" "tmp/$D/"
+                cp README.md README.en.md LICENSE "tmp/$D/"
+                ditto -c -k --sequesterRsrc --keepParent "tmp/$D" "pkg/$D.zip"
+              done ;;
+          esac
+          ls -la pkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds-${{ matrix.name }}
+          path: pkg/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Full ZIP and release notes
+        run: |
+          VER=$(python3 scripts/version.py)
+          # архив со всеми файлами проекта: исходники, прошивки, документация, скрипты
+          git archive --format=zip --prefix="openwrt-installer-snr-ax2-$VER/" -o "out/openwrt-installer-snr-ax2-$VER-all-files.zip" HEAD
+          (cd out && sha256sum * > SHA256SUMS.txt)
+          ls -la out
+          REPO="https://github.com/${{ github.repository }}"
+          cat > notes.md <<EOF
+          ## Что скачать
+
+          | Система | Файл |
+          |---|---|
+          | **Windows 10 / 11** | \`OpenWrtInstaller-Setup-$VER-windows-x64.exe\` — установщик с ярлыками, или \`OpenWrtInstaller-$VER-windows-x64.exe\` — один файл без установки |
+          | **Windows 7 SP1 / 8 / 8.1** | \`OpenWrtInstaller-Setup-$VER-windows7-x64.exe\` или \`OpenWrtInstaller-$VER-windows7-x64.exe\` (без сканирования QR камерой) |
+          | **Linux x64** | \`OpenWrtInstaller-$VER-linux-x64.tar.gz\` |
+          | **macOS Apple M1–M4** | \`OpenWrtInstaller-$VER-macos-arm64.zip\` |
+          | **macOS Intel** | \`OpenWrtInstaller-$VER-macos-x64.zip\` |
+          | Все файлы проекта | \`openwrt-installer-snr-ax2-$VER-all-files.zip\` — исходники, прошивки, документация |
+
+          Прошивка OpenWrt 25.12.4 для SNR-CPE-AX2 **уже встроена** в программу. \`OpenWrtPanel-…\` — панель управления без прошивки (для любого роутера с OpenWrt).
+
+          Установка через git:
+          \`\`\`
+          git clone $REPO.git
+          cd ${{ github.event.repository.name }}
+          run.bat      # Windows
+          ./run.sh     # Linux / macOS
+          \`\`\`
+
+          Контрольные суммы файлов — \`SHA256SUMS.txt\`. Что нового — [CHANGELOG.md]($REPO/blob/main/CHANGELOG.md).
+          EOF
+          sed -i 's/^          //' notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: OpenWrt Installer ${{ github.ref_name }}
+          body_path: notes.md
+          files: out/*
+          generate_release_notes: true
+          make_latest: true

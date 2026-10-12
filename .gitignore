@@ -1,0 +1,20 @@
+# личные данные программы — НЕ публиковать
+settings.json
+settings.json.tmp
+subscription.txt
+install_log.txt
+blockcheck_log.txt
+backup_*/
+# сборка
+build/
+dist/
+pkg/
+release/
+*.spec
+__pycache__/
+*.pyc
+.venv/
+venv/
+panel_settings.json
+panel_settings.json.tmp
+panel_log.txt

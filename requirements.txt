@@ -1,0 +1,5 @@
+# Windows 10/11, Linux, macOS (Python 3.9+)
+paramiko>=3.4
+segno>=1.6
+# Сканирование QR камерой ноутбука (необязательно, без него программа работает)
+opencv-python-headless>=4.8
